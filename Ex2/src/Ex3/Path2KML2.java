@@ -8,16 +8,17 @@ import java.util.ArrayList;
 
 import Geom.Circle;
 import Geom.Point3D;
+import Robot.Fruit;
+import Robot.Packman;
 /**
  * this class represent the kml file
  * @author jbareen Mohamad nadeem jazmawe 
  * 207392283_314638867
  */
 public class Path2KML2 {
-	private PathAlgo2 path;//calling the path Algorithm
+	private ShortestPathAlgo path;//calling the path Algorithm
 	public Path2KML2(ArrayList<Packman> pac,ArrayList<Fruit> fruit) {//build the kml by the packman list and the fruit list that called from the map class
-		path=new PathAlgo2(pac,fruit);
-		path.runParallel();
+		path=new ShortestPathAlgo(pac,fruit);
 	}
 	public static void main(String[] args) {
 		ArrayList<Packman> pac=new ArrayList<Packman>();
@@ -32,17 +33,17 @@ public class Path2KML2 {
 	public String PlaceMarkFruit(int j) {//build the place mark for the fruit by the coordinator
 		String s="";
 		String t="";
-		for (int i = 1; i < path.path.get(j).GPS.size(); i++) {
+		for (int i = 1; i < path.all_path.get(j).fruitToEat.size(); i++) {
 			s+=      "      <Placemark>\n" + 
 					"        <TimeStamp>\n" ;
-			t=path.path.get(j).FruitTimeList.get(i);
+			t=path.all_path.get(j).FruitTimeList.get(i);
 			t=t.replaceAll("T", " ");
 			s+="          <when>"+t+"</when>\n";
 			s+="        </TimeStamp>\n" + 
 					"        <styleUrl>";
 			s+="#paddle-a</styleUrl>\n";
 			s+=	"        <Point>\n" + 
-					"          <coordinates>"+path.path.get(j).GPS.get(i).getFruit().y()+","+path.path.get(j).GPS.get(i).getFruit().x()+"</coordinates>\n" + 
+					"          <coordinates>"+path.all_path.get(j).fruitToEat.get(i).getFruit().y()+","+path.all_path.get(j).fruitToEat.get(i).getFruit().x()+"</coordinates>\n" + 
 					"        </Point>\n" + 
 					"      </Placemark>\n";
 		}
@@ -50,15 +51,15 @@ public class Path2KML2 {
 	}
 	public String PlaceMark(int j) {//build the place mark for the packman by the coordinator
 		String s="";
-		for (int i = 0; i < path.path.get(j).Slope.size(); i++) {
+		for (int i = 0; i < path.all_path.get(j).Slope.size(); i++) {
 				s+=      "      <Placemark>\n" + 
 						"        <TimeStamp>\n" ;
-				s+="          <when>"+path.path.get(j).PacTimeList.get(i)+"</when>\n";
+				s+="          <when>"+path.all_path.get(j).PacTimeList.get(i)+"</when>\n";
 				s+="        </TimeStamp>\n" + 
 						"        <styleUrl>";
 				s+="#hiker-icon</styleUrl>\n";
 				s+=	"        <Point>\n" + 
-						"          <coordinates>"+path.path.get(j).Slope.get(i).y()+","+path.path.get(j).Slope.get(i).x()+"</coordinates>\n" + 
+						"          <coordinates>"+path.all_path.get(j).Slope.get(i).y()+","+path.all_path.get(j).Slope.get(i).x()+"</coordinates>\n" + 
 						"        </Point>\n" + 
 						"      </Placemark>\n";
 			}
@@ -78,8 +79,8 @@ public class Path2KML2 {
 				"        <tessellate>1</tessellate>\n" + 
 				"        <altitudeMode>absolute</altitudeMode>\n" + 
 				"		 <coordinates>";
-		for (int i = 0; i < path.path.get(j).GPS.size(); i++) {
-			s+=path.path.get(j).GPS.get(i).getFruit().y()+","+path.path.get(j).GPS.get(i).getFruit().x()+" ";
+		for (int i = 0; i < path.all_path.get(j).fruitToEat.size(); i++) {
+			s+=path.all_path.get(j).fruitToEat.get(i).getFruit().y()+","+path.all_path.get(j).fruitToEat.get(i).getFruit().x()+" ";
 		}
 		s+="</coordinates>\n      </LineString>\n" + 
 				"    </Placemark>\n";
@@ -129,14 +130,14 @@ public class Path2KML2 {
 					"      </ListStyle>\n" + 
 					"    </Style>\n" + 
 					"    <styleUrl>#check-hide-children</styleUrl>\n<Folder>\n"); 
-			System.out.println(path.path.size());
-			for (int i = 0; i <path.path.size(); i++) {
+			System.out.println(path.all_path.size());
+			for (int i = 0; i <path.all_path.size(); i++) {
 				bufferedWriter.write(PlaceMarkFruit(i));
 				bufferedWriter.write(PlaceMark(i));
 			}
 			//path.add(new Point3D(Double.parseDouble(row[7]),Double.parseDouble(row[6])));
 			bufferedWriter.write("   </Folder>\n");
-			for (int i = 0; i <path.path.size(); i++) {
+			for (int i = 0; i <path.all_path.size(); i++) {
 				bufferedWriter.write(Migration(i));
 			}
 			// Note that write() does not automatically

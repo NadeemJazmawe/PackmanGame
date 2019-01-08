@@ -1,4 +1,4 @@
-package Ex3;
+package Coords;
 
 import static org.junit.jupiter.api.Assertions.*;
 

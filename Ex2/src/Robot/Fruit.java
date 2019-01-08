@@ -1,7 +1,4 @@
-package Ex3;
-
-import java.awt.Color;
-import java.awt.Graphics;
+package Robot;
 
 import Geom.Point3D;
 /**

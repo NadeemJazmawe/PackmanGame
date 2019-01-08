@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import Geom.Point3D;
+import Robot.Fruit;
+import Robot.Packman;
 
 public class Path2KML {
 	private ArrayList<Point3D> path;

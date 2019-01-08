@@ -1,6 +1,5 @@
-package Ex3;
+package Coords;
 
-import Coords.MyCoords;
 import Geom.Point3D;
 /**
  * This class represent the Coordinators for the map of ariel on GUI, that changes the global coords to pixels and the sane for pixels to global coords

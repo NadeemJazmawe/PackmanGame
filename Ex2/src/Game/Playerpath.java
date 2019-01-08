@@ -1,4 +1,4 @@
-package Ex3;
+package Game;
 
 import java.awt.Graphics;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package Ex3;
+package Game;
 
 import Geom.Point3D;
 

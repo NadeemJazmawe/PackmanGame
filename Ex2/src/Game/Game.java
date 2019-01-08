@@ -1,4 +1,4 @@
-package Ex3;
+package Game;
 
 import java.awt.Point;
 import java.io.BufferedReader;

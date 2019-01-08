@@ -8,7 +8,11 @@ import Geom.Circle;
 import Geom.Point3D;
 import Robot.Fruit;
 import Robot.Packman;
-
+/*
+ * this function represent the path algorithm for the packmans to eat the fruit n the game 
+ * coded by jbareen mohamad, nadeem jazmawe
+ * 207392283_314638867
+ */
 public class ShortestPathAlgo {
 	
 	private ArrayList<Packman> pac;//the packman list 
@@ -27,7 +31,7 @@ public class ShortestPathAlgo {
 			all_path.get(i).sort();
 			i++;
 		}
-		sortByTime();
+		sortByTime();//this function sort the fruit to get eaten with min time 
 	}
 	public String toString() {//print all the paths
 		String s="";
@@ -37,28 +41,28 @@ public class ShortestPathAlgo {
 		return s;
 	}
 	
-	public void sortByTime() {
+	public void sortByTime() {//this function sort the fruit to be eaten with min time by the packman speed and distance from the fruits
 		
 		for(Fruit f : fruit) {
 			double minTime = Double.MAX_VALUE ;
 			double index = 0 ;
 			int i=0;
 			for(path pp : all_path) {
-				if(minTime>pp.timeToFruit(pp.findOfFruit(f))) {
-					minTime=pp.timeToFruit(pp.findOfFruit(f));
+				if(minTime>pp.timeToFruit(pp.findOfFruit(f))) {//the min time using the findoffruit function
+					minTime=pp.timeToFruit(pp.findOfFruit(f));//get the time 
 					index=i;
 				}
 				i++;
 			}
 			for (int j = 0; j < all_path.size(); j++) {
 				if(j!=index) {
-					all_path.get(j).fruitToEat.remove(all_path.get(j).findOfFruit(f));
+					all_path.get(j).fruitToEat.remove(all_path.get(j).findOfFruit(f));//remove the fruit from the packman list that will eat it with more time than others
 				}
 			}
 		}
 		for(path pp : all_path) {
-			pp.timeFromOneFruit();
-			pp.Locations_2_points();
+			pp.timeFromOneFruit();//the time for one fruit
+			pp.Locations_2_points();//the points for the packman 
 		}
 	}
 
@@ -66,7 +70,7 @@ public class ShortestPathAlgo {
 	
 	 class path{
 		Packman pac ;
-		ArrayList<Fruit> fruitToEat = new ArrayList<Fruit>() ;
+		ArrayList<Fruit> fruitToEat = new ArrayList<Fruit>() ;//the gps points to the packman 
 		ArrayList<Double> PathTime=new ArrayList<Double>();//the times he took to eat the next fruit
 		ArrayList<Point3D> Slope=new ArrayList<Point3D>();//all the points he must step from fruit to fruit by the speed and time
 		ArrayList<String> PacTimeList=new ArrayList<String>();//the list of time to show on the kml file
@@ -109,7 +113,7 @@ public class ShortestPathAlgo {
 				}
 			}
 		}
-		public double timeToFruit(int index) {
+		public double timeToFruit(int index) {//get the time from the packman to selected fruit
 			double time=0;
 			MyCoords coords = new MyCoords();
 			
@@ -186,24 +190,4 @@ public class ShortestPathAlgo {
 			FruitTimeList.add(timeLocation);
 		}
 	}
-	public static void main(String[] args) {
-		ArrayList<Packman> pac=new ArrayList<Packman>();
-		ArrayList<Fruit> fruit=new ArrayList<Fruit>();
-		pac.add(new Packman(new Circle(new Point3D(10,10,0),10),1000));
-		pac.add(new Packman(new Circle(new Point3D(20,20,0),10),1000));
-		pac.add(new Packman(new Circle(new Point3D(50,50,0),10),1000));
-		fruit.add(new Fruit(new Point3D(5,5,0)));
-		fruit.add(new Fruit(new Point3D(6,6,0)));
-		fruit.add(new Fruit(new Point3D(9,9,0)));
-		fruit.add(new Fruit(new Point3D(7,7,0)));
-		fruit.add(new Fruit(new Point3D(8,8,0)));
-		fruit.add(new Fruit(new Point3D(52,52,0)));
-		fruit.add(new Fruit(new Point3D(25,25,0)));
-		fruit.add(new Fruit(new Point3D(15,15,0)));
-		fruit.add(new Fruit(new Point3D(35,35,0)));
-		ShortestPathAlgo at = new ShortestPathAlgo(pac,fruit);
-		//at.runParallel();
-		System.out.println(at.toString());
-	}
-
 }

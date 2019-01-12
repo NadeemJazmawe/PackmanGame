@@ -1,6 +1,7 @@
 package Game;
 
 import java.awt.Color;
+import java.awt.FileDialog;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Menu;
@@ -8,12 +9,14 @@ import java.awt.MenuBar;
 import java.awt.MenuItem;
 import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
@@ -24,10 +27,12 @@ import javax.swing.JOptionPane;
 import Coords.Coord_Game;
 import Geom.Circle;
 import Geom.Point3D;
+import Robot.Box;
 import Robot.Fruit;
 import Robot.Packman;
 import Robot.ghosts;
 import Robot.player;
+import sun.rmi.runtime.NewThreadAction;
 /**
  * this class represent the map class of GUI frame that showed the map image of ariel and play the game on it 
  * that every packman run to eat all the fruit on his path by his speed
@@ -36,7 +41,8 @@ import Robot.player;
  */
 public class Map extends JFrame {
 	private Point3D min = null ;
-	private boolean FClicked=false,PClicked=false,CLEARC=false,playerClicked=false,ghostsClicked=false,boxClicked=false;//the packman button is clicked ,fruit ,clear ,player ,ghost and box.
+	private Date date = new Date();
+	private boolean FClicked=false,PClicked=false,CLEARC=false,playerClicked=false,ghostsClicked=false,boxClicked=false,moveClicked=false,isClicked=false,moveClickedStep=false;//the packman button is clicked ,fruit ,clear ,player ,ghost and box.
 	private MenuBar MB;//make the menu bar 
 	private static int index=0;//index to run the threads
 	private ShortestPathAlgo newPath;//the pathAlgorthm to all the packmans
@@ -45,7 +51,7 @@ public class Map extends JFrame {
 	private ArrayList<Packman> pac_list;//all the packman list
 	private ArrayList<Fruit> fruit_list;//all the fruit list
 	private ArrayList<ghosts> ghost_list;//all the ghost list
-	private ArrayList<Box> box_list ;
+	private ArrayList<Box> box_list ;//all the box list
 	private player Player; //our player
 	public BufferedImage myImage;//the image of ariel 
 	public void paint(Graphics g){//the paint function that draw all the packmans from the list and all the fruit too and draw the path for every packman
@@ -79,7 +85,8 @@ public class Map extends JFrame {
 		MenuItem exit = new MenuItem("Exit");
 		MenuItem clear = new MenuItem("Clear");
 		MenuItem run = new MenuItem("Run");
-		MenuItem run2 = new MenuItem("Run With Player");
+		MenuItem run2 = new MenuItem("Run With Player - Step");
+		MenuItem run3 = new MenuItem("Run With Player");
 		MenuItem save = new MenuItem("Save");
 		MenuItem import1 = new MenuItem("Import");
 		MenuItem fruit = new MenuItem("Fruit");
@@ -94,7 +101,8 @@ public class Map extends JFrame {
 		File.add(exit);//add the exit item to the file list
 		PathD.add(PathDR);//add the Draw path item to the Path list
 		PathD.add(run);//add the Run item to the Path list
-		PathD.add(run2);//add the Run with player item to the Path list
+		PathD.add(run3);//add the Run with player item to the Path list
+		PathD.add(run2);//add the Run with player item to the Path list(only one step)
 		PathD.add(pathKML);//add the Path to KML item to the Path list
 		Game.add(fruit);//add the fruit item to the Game list
 		Game.add(packman);//add the packman item to the Game list
@@ -108,7 +116,11 @@ public class Map extends JFrame {
 				FClicked=false;
 				playerClicked=false;
 				ghostsClicked=false;
+				boxClicked=false;
+				moveClicked=false;
 				CLEARC=true;
+				isClicked= false;
+				moveClickedStep=false;
 				pac_list.clear();
 				fruit_list.clear();
 				ghost_list.clear();
@@ -136,6 +148,8 @@ public class Map extends JFrame {
 				playerClicked=false;
 				ghostsClicked=false;
 				boxClicked=false;
+				moveClicked=false;
+				moveClickedStep=false;
 			}
 		});
 		fruit.addActionListener(new java.awt.event.ActionListener() {//add action to fruit item that fruit is clicked and now you can draw fruits on the frame
@@ -145,6 +159,8 @@ public class Map extends JFrame {
 				playerClicked=false;
 				ghostsClicked=false;
 				boxClicked=false;
+				moveClicked=false;
+				moveClickedStep=false;
 			}
 		});
 		clear.addActionListener(new java.awt.event.ActionListener() {//add action to clear item and now the frame is cleared by clearing the lists of the packmans and the fruits
@@ -154,7 +170,10 @@ public class Map extends JFrame {
 				playerClicked=false;
 				ghostsClicked=false;
 				boxClicked=false;
+				moveClicked=false;
 				CLEARC=true;
+				isClicked= false;
+				moveClickedStep=false;
 				pac_list.clear();
 				fruit_list.clear();
 				ghost_list.clear();
@@ -171,7 +190,9 @@ public class Map extends JFrame {
 				playerClicked=false;
 				ghostsClicked=false;
 				boxClicked=false;
+				moveClicked=false;
 				CLEARC=false;
+				moveClickedStep=false;
 				if(pac_list.isEmpty()&&fruit_list.isEmpty()) 
 					JOptionPane.showMessageDialog(null, "Error! Can't run without any packmans and fruits!");//show message if the fruit list is empty and the packman
 				else if(fruit_list.isEmpty()) 
@@ -193,7 +214,9 @@ public class Map extends JFrame {
 				playerClicked=false;
 				ghostsClicked=false;
 				boxClicked=false;
-				CLEARC=false;
+				moveClicked=false;
+				isClicked= false;
+				//				CLEARC=false;
 				if(Player==null && fruit_list.isEmpty()) 
 					JOptionPane.showMessageDialog(null, "Error! Can't run without any player and fruits!");//show message if the fruit list is empty and the packman
 				else if(fruit_list.isEmpty()) 
@@ -201,17 +224,30 @@ public class Map extends JFrame {
 				else if(Player==null) 
 					JOptionPane.showMessageDialog(null, "Error! Can't run without player!");//show message if the fruit list is empty and the packman
 				else {//start the game
-					while(fruit != null) {
-						Playerpath n = new Playerpath(pac_list, fruit_list,ghost_list, Player);
-						pac_list = n.getPac_list();
-						fruit_list = n.getFruit_list();
-						ghost_list = n.getGhost_list();
-						repaint();
-					}
+					moveClickedStep=true;
 				}
 			}
 		});
-
+		run3.addActionListener(new java.awt.event.ActionListener() {//add action to run with player item that starts the game 
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				PClicked=false;
+				FClicked=false;
+				playerClicked=false;
+				ghostsClicked=false;
+				boxClicked=false;
+				moveClickedStep=false;
+				//				CLEARC=false;
+				if(Player==null && fruit_list.isEmpty()) 
+					JOptionPane.showMessageDialog(null, "Error! Can't run without any player and fruits!");//show message if the fruit list is empty and the packman
+				else if(fruit_list.isEmpty()) 
+					JOptionPane.showMessageDialog(null, "Error! Can't run without any fruits!");//show message if the fruit list is empty and the packman
+				else if(Player==null) 
+					JOptionPane.showMessageDialog(null, "Error! Can't run without player!");//show message if the fruit list is empty and the packman
+				else {//start the game
+					moveClicked=true;
+				}
+			}
+		});
 		PathDR.addActionListener(new java.awt.event.ActionListener() {//add action to path draw item that only shows the path without running it
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				if(pac_list.isEmpty()&&fruit_list.isEmpty()) 
@@ -242,6 +278,8 @@ public class Map extends JFrame {
 				playerClicked=true;
 				ghostsClicked=false;
 				boxClicked=false;
+				moveClicked=false;
+				moveClickedStep=false;
 			}
 		});
 		ghosts.addActionListener(new java.awt.event.ActionListener() {//add action to ghost item that ghost is clicked and now you can draw ghosts on the frame
@@ -251,6 +289,8 @@ public class Map extends JFrame {
 				playerClicked=false;
 				ghostsClicked=true ;
 				boxClicked=false;
+				moveClicked=false;
+				moveClickedStep=false;
 			}
 		});
 		box.addActionListener(new java.awt.event.ActionListener() {//add action to box item that box is clicked and now you can draw boxes on the frame
@@ -260,6 +300,8 @@ public class Map extends JFrame {
 				playerClicked=false;
 				ghostsClicked=false;
 				boxClicked=true;
+				moveClicked=false;
+				moveClickedStep=false;
 			}
 		});	
 	}
@@ -287,32 +329,7 @@ public class Map extends JFrame {
 			//double time1=newPath.path.get(i).totalTime(newPath.path);
 			new Thread(new Runnable() {//making a thread to run all the packmans in the same time and every packman runs by his speed
 				int i=index++;
-				//				@Override
-				//				public void run() {
-				//					Graphics g=getGraphics();
-				//					Coord_Game cg=new Coord_Game();
-				//					for(int j =0 ; j< newPath.path.get(i).GPS.size()-1 ;j++ ) {
-				//						g.setColor(Color.RED);
-				//						try {
-				//							Thread.sleep((int) (10*(newPath.path.get(i).PathTime.get(j+1))));
-				//						} catch (InterruptedException e) {
-				//							e.printStackTrace();
-				//						}
-				//						Fruit newPoint = newPath.path.get(i).GPS.get(j);
-				//						Fruit nextPoint = newPath.path.get(i).GPS.get(j+1);
-				//						Point3D local=cg.GpsPixel(newPoint.getFruit(), getHeight(), getWidth());
-				//						Point3D localp=cg.GpsPixel(nextPoint.getFruit(), getHeight(), getWidth());
-				//						g.drawLine((int)(local.x()-0.003*getWidth()),(int)(local.iy()+0.025*getHeight()), (int)(localp.ix()-0.003*getWidth()), (int)(localp.iy()+0.025*getHeight()));
-				//						try {
-				//							Thread.sleep((int) (10*(newPath.path.get(i).PathTime.get(j+1))));
-				//						} catch (InterruptedException e) {
-				//							e.printStackTrace();
-				//						}
-				//						pac_list.get(i).setCoords(new Circle(nextPoint.getFruit(),pac_list.get(i).getCoords().get_radius()));
-				//						isEqualsVal(pac_list.get(i),nextPoint);
-				//						repaint();
-				//					}
-				//				}
+
 				@Override
 				public void run() {//the run function of the thread that set the location of the packman by the list from the PathAlgorthm
 					for (int j = 0; j < newPath.all_path.get(i).Slope.size(); j++) {
@@ -331,25 +348,31 @@ public class Map extends JFrame {
 						isEqualsVal(pac_list.get(i));
 					repaint();
 				}
+
 			}).start();//start the thread run function
 		}
 	}
 	private void selectListener(java.awt.event.ActionEvent evt) {//function the can select from your pc
-		//https://docs.oracle.com/javase/7/docs/api/javax/swing/JFileChooser.html
-
-		JFileChooser fC=new JFileChooser();
-		int resault=fC.showOpenDialog(null);
-		if(resault==JFileChooser.APPROVE_OPTION) {
-			String filename=fC.getSelectedFile().getAbsolutePath();
-			//JOptionPane.showMessageDialog(null, fileName);
-			System.out.println(filename);
-			Game g=new Game(filename);
-			pac_list=g.getPackman();
-			fruit_list=g.getFruit();
-			Player = g.getPlayer();
-			box_list = g.getBox();
-			ghost_list = g.getGhost();
-			Drawall();
+		FileDialog d = new FileDialog(this,"Game File loader", FileDialog.LOAD);
+		d.show();
+		String dr = d.getDirectory();
+		String fi = d.getFile();
+		String dir = dr;
+		try{
+			File f = new File(dir+fi);
+			if(f.exists()) {
+				System.out.println(f.getAbsolutePath());
+				Game g=new Game(f.getAbsolutePath());
+				pac_list=g.getPackman();
+				fruit_list=g.getFruit();
+				Player = g.getPlayer();
+				box_list = g.getBox();
+				ghost_list = g.getGhost();
+				Drawall();
+			}
+		}
+		catch(Exception ee) {
+			ee.printStackTrace();
 		}
 	}
 	private void saveListener(java.awt.event.ActionEvent evt) {//function that can save the packman list and the fruit list to the project
@@ -394,11 +417,11 @@ public class Map extends JFrame {
 		return b;
 	}
 	public void Drawall() {//function that uses the graphics interface to draw all fruits , packmans , player , ghosts and boxs;
+		Drawboxs();
 		DrawFruit();
 		DrawPackman();
 		DrawPlayer();
 		DrawGhost();
-		Drawboxs();
 	}
 	public void DrawFruit() {//function that uses the graphics iterface that draw the fruits from the fruit list
 		Graphics g=getGraphics();
@@ -406,7 +429,6 @@ public class Map extends JFrame {
 		for (Fruit fruit : fruit_list) {
 			g.setColor(Color.GREEN);
 			Point3D f=cg.GpsPixel(fruit.getFruit(),this.getHeight(), this.getWidth());//changing the global coords tpo pixels by the Coords_Game class
-			//System.out.println("Fruit click : "+f);
 			g.fillOval((int)(f.x()-0.003*getWidth()), (int)(f.y()+0.025*getHeight()), 10, 10);//draw the fruit by adding circle in the pixels
 		}
 	}
@@ -426,11 +448,10 @@ public class Map extends JFrame {
 			Coord_Game cg=new Coord_Game();
 			g.setColor(Color.PINK);
 			Point3D p=cg.GpsPixel(Player.getCoords().get_cen(),this.getHeight(), this.getWidth());
-			g.fillOval((int)(p.x()-0.003*getWidth()), (int)(p.y()+0.025*getHeight()), 15*(int)Player.getCoords().get_radius(), 15*(int)Player.getCoords().get_radius());
+			g.fillOval((int)(p.x()-0.003*getWidth()), (int)(p.y()+0.025*getHeight()), 10*(int)Player.getCoords().get_radius(), 10*(int)Player.getCoords().get_radius());
 		}
 	}
 	public void DrawGhost() {//the same but to ghosts
-
 		Graphics g=getGraphics();
 		Coord_Game cg=new Coord_Game();
 		for (ghosts G :ghost_list) {
@@ -446,92 +467,96 @@ public class Map extends JFrame {
 			g.setColor(Color.black);
 			Point3D p=cg.GpsPixel(b.getMin(),this.getHeight(), this.getWidth());
 			Point3D p1=cg.GpsPixel(b.getMax(),this.getHeight(), this.getWidth());
-
 			g.fillRect(Math.min(p.ix() , p1.ix()),Math.min(p.iy() , p1.iy()), Math.abs(p.ix()-p1.ix()) , Math.abs(p.iy()-p1.iy()));
 		}
 	}
+	public void gameStart(Point3D p ) {
+		Playerpath px = new Playerpath(pac_list, fruit_list, ghost_list, Player , p ,date ,box_list);
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				for(; ;) {
+					if(!isClicked || fruit_list.isEmpty()) 
+						break;
 
-	public class Clicks implements MouseListener{//clicks class that implements from the mouse listener interface that allow us to click on the frame
+					//Playerpath px = new Playerpath(pac_list, fruit_list, ghost_list, Player , p ,date);
+					px.workall(date);
+					try {//make the Game sleeps for 100 ms and then start working
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					Player = px.getPlayer();
+					fruit_list = px.getFruit_list();
+					pac_list = px.getPac_list();
+					ghost_list = px.getGhost_list();
+					System.out.println("Player Score : " + Player.getPoint());
+					repaint();
+				}
+			}
+		}).start();
+	}
+	public void gameStartStep(Point3D p ) {
+		if(!fruit_list.isEmpty()) {
+			Playerpath px = new Playerpath(pac_list, fruit_list, ghost_list, Player, p, date, box_list);
+			px.workall(date);
+			Player = px.getPlayer();
+			fruit_list = px.getFruit_list();
+			pac_list = px.getPac_list();
+			ghost_list = px.getGhost_list();
+			System.out.println("Player Secore : " + Player.getPoint());
+			repaint();
+		}
+	}
+	private void addPlayer(Point3D p) {
+		int PlayerSpeed=1 ;
+		for(int i=0 ;i < pac_list.size() ; i++)
+			PlayerSpeed = Integer.max(PlayerSpeed , pac_list.get(i).getSpeed());
+		for(int i=0 ; i < ghost_list.size() ; i++)
+			PlayerSpeed = Integer.max(PlayerSpeed , ghost_list.get(i).getSpeed());
+		Player = new player(new Circle(p,1),(int)(1.5*(PlayerSpeed+1)));
+	}
+	public class Clicks extends MouseAdapter{//clicks class that implements from the mouse listener interface that allow us to click on the frame
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			Coord_Game Coords = new Coord_Game();
 			Point3D end = Coords.PixelGps(new Point3D(e.getX(),e.getY(),0), getHeight(), getWidth());//chnage the pixels to global point
 			//System.out.println("Mouse Click : "+e.getX()+","+e.getY());
-			if(PClicked) {//if the packman item is clicked then add a packman to the packman list and draw it
-				FClicked=false;
-				playerClicked=false;
-				ghostsClicked=false;
-				boxClicked=false;
+			if(PClicked) //if the packman item is clicked then add a packman to the packman list and draw it
 				pac_list.add(new Packman(new Circle(end,1),1));
-				repaint();
-			}
-			else if(FClicked) {//if the fruit item is clicked then add a fruit to the fruit list and draw it
-				PClicked=false;
-				playerClicked=false;
-				ghostsClicked=false;
-				boxClicked=false;
+			else if(FClicked) //if the fruit item is clicked then add a fruit to the fruit list and draw it
 				fruit_list.add(new Fruit(end));
-				repaint();
-			}
-			else if(playerClicked) {//if the player item is clicked then add a player to the fruit list and draw it
-				PClicked=false;
-				FClicked=false;
-				ghostsClicked=false;
-				boxClicked=false;
-				Player = new player(new Circle(end,1),2);
-				repaint();
-			}
-			else if(ghostsClicked) {//if the ghosts item is clicked then add a ghost to the ghosts list and draw it
-				PClicked=false;
-				FClicked=false;
-				playerClicked=false;
-				boxClicked=false;
+			else if(playerClicked) //if the player item is clicked then add a player to the fruit list and draw it
+				addPlayer(end);
+			else if(ghostsClicked) //if the ghosts item is clicked then add a ghost to the ghosts list and draw it
 				ghost_list.add(new ghosts(new Circle(end,1),1));
-				repaint();
-			}
-			else if(boxClicked) {//if the box item is clicked then add a box to the box list and draw it
-				PClicked=false;
-				FClicked=false;
-				playerClicked=false;
-				ghostsClicked=false;
+			else if(boxClicked) {//if the box item is clicked then add a box to the box list and draw it	
 				if(min != null) {
-					System.out.println("min="+min);
-					System.out.println("end="+end);
 					box_list.add(new Box(min , end));
 					min = null; 
 				}
 				else
 					min = end ;
-
-				repaint();
 			}
-			else {//just print the clicked coords
-				FClicked=false;
-				PClicked=false;
-				playerClicked=false;
-				ghostsClicked=false;
-				boxClicked=false;
+			else if(moveClicked) {
+				isClicked= false;
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				isClicked = true;
+				gameStart(end );
+			}
+			else if(moveClickedStep) {
+				gameStartStep(end );
+			}
+			else //just print the clicked coords
 				System.out.println(end.x()+","+end.y());
-				repaint();
-			}
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
+			repaint();
 		}
 	}
 }
+
 

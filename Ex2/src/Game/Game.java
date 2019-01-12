@@ -12,6 +12,7 @@ import java.util.Arrays;
 
 import Geom.Circle;
 import Geom.Point3D;
+import Robot.Box;
 import Robot.Fruit;
 import Robot.Packman;
 import Robot.ghosts;

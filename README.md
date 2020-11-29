@@ -30,7 +30,9 @@ At the end of the game the score that been got will be show in the scren, also i
 
 # Installation
 You need to install the the following code.
+
 after that you need to run the Game class(it can be found in: Ex2 -> src -> Game -> Game.java).
+
 and start playing...
 
 Enjoy , and try to get the Score !!

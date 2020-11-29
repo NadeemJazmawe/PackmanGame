@@ -3,7 +3,9 @@
 **This project represent packman Game in Ariel map.**
 
 This game represent an modified packman game .
+
 the mean idea to play a new version of packman game that i have developed while studying.
+
 all the game has been devloped in java, using Eclipse workspace.
 
 # About The Game
